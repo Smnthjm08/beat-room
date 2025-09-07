@@ -10,6 +10,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     // autoSignIn: false //defaults to true
+    callbackURL: "/dashboard"
   },
   socialProviders: {
     google: {
