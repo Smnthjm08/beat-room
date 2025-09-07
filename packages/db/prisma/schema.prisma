@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -15,15 +9,19 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String   @id
   name          String
   email         String
   emailVerified Boolean
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
-  sessions      Session[]
-  accounts      Account[]
+
+  sessions     Session[]
+  accounts     Account[]
+  stream       Stream[]
+  upvotes      Upvote[]
+  hostedSpaces Space[]   @relation("hostedBy")
 
   @@unique([email])
   @@map("user")
@@ -37,8 +35,9 @@ model Session {
   updatedAt DateTime
   ipAddress String?
   userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
   @@map("session")
@@ -48,8 +47,6 @@ model Account {
   id                    String    @id
   accountId             String
   providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -59,6 +56,9 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -72,4 +72,52 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+enum StreamType {
+  Spotify
+  Youtube
+}
+
+model Space {
+  id        String   @id @default(uuid())
+  title     String   @default("")
+  isPrivate Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  streams Stream[] @relation("spaceStreams")
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], name: "hostedBy")
+
+  @@map("space")
+}
+
+model Stream {
+  id     String     @id @default(uuid())
+  type   StreamType
+  active Boolean    @default(true)
+  Upvote Upvote[]
+
+  spaceId String
+  space   Space  @relation(references: [id], fields: [spaceId], name: "spaceStreams")
+
+  addedById String
+  user      User   @relation(references: [id], fields: [addedById])
+
+  @@map("stream")
+}
+
+model Upvote {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  streamId String
+  stream   Stream @relation(fields: [streamId], references: [id])
+
+  @@unique([userId, streamId])
+  @@map("upvote")
 }
