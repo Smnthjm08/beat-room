@@ -1,44 +1,74 @@
-"use client";
+"use client"
 
-import { Button } from "@workspace/ui/components/button";
-import Link from "next/link";
-import { LogoutButton } from "./buttons/logout";
-import { authClient } from "@workspace/auth/client";
+import Link from "next/link"
+import { Button } from "@workspace/ui/components/button"
+import { usePathname } from "next/navigation"
+import { authClient } from "@workspace/auth/client"
+import { LogoutButton } from "./buttons/logout"
 
 export function Appbar() {
-  const { data, isPending } = authClient.useSession();
-
-  // Render skeleton until client determines session
-  if (isPending) {
-    return (
-      <nav className="border-b flex flex-row h-14 px-8 sm:px-12 py-4 items-center">
-        <h3 className="font-extrabold">resonate</h3>
-      </nav>
-    );
-  }
+  const pathname = usePathname()
+  const { data, isPending } = authClient.useSession()
 
   return (
-    <nav className="border-b flex flex-row h-14 border-amber-100 justify-between px-8 sm:px-12 py-4 items-center">
-      <Link href={"/"}>
-        <h3 className="font-extrabold">resonate</h3>
-      </Link>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link href="/" className="font-extrabold text-xl text-foreground">
+            resonate
+          </Link>
 
-      {!data?.user ? (
-        <div className="space-x-2 sm:space-x-4">
-          <Link href="/signup">
-            <Button size="sm" variant="defaultpointer">
-              Sign Up
-            </Button>
-          </Link>
-          <Link href="/signin">
-            <Button size="sm" variant="secondarypointer">
-              Sign In
-            </Button>
-          </Link>
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link
+              href="/"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === "/" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              Home
+            </Link>
+            <Link
+              href="/dashboard"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/profile"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === "/profile" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              Profile
+            </Link>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="flex items-center space-x-4">
+            {isPending ? (
+              // Skeleton / Placeholder state
+              <div className="w-20 h-8 bg-muted rounded animate-pulse" />
+            ) : data?.user ? (
+              <LogoutButton />
+            ) : (
+              <>
+                <Link href="/signin">
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button size="sm">Sign Up</Button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-      ) : (
-        <LogoutButton />
-      )}
+      </div>
     </nav>
-  );
+  )
 }
